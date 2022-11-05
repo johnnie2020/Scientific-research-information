@@ -5,8 +5,8 @@ import { getToken } from './token'
 
 // import { reject, resolve } from 'core-js/fn/promise'
 const axios = theAxios.create({
-  baseURL: 'http://geek.itheima.net',
-  timeout: 20000 // 20秒超时时间
+  baseURL: 'http://toutiao.itheima.net',
+  timeout: 50000 // 50秒超时时间
 })
 
 // 添加请求拦截器
@@ -38,7 +38,7 @@ axios.interceptors.response.use(function (response) {
   // 对响应错误做点什么
   console.dir(error)
   // console.log(this) // undefined
-  if (error.response.status === 401) {
+  if (error.response && error.response.status === 401) {
     // 不能使用this.$router(因为this不是vue组件对象无法调用$router)
     // 解决：this.$router为了拿到router路由对象，所以直接去上面y引入@/router下router对象
     Notify({ type: 'warning', message: '身份已过期' })
