@@ -27,7 +27,10 @@
           <span>{{ formatTime(artObj.pubdate) }}</span>
         </div>
         <!-- 反馈按钮 -->
-        <van-icon name="cross" @click="show = true" />
+        <van-icon
+        name="cross"
+        @click.stop="show = true"
+        v-if="isShow"/>
       </div>
     </template>
   </van-cell>
@@ -62,6 +65,10 @@ export default {
   props: {
     artObj: {
       type: Object
+    },
+    isShow: {
+      type: Boolean,
+      default: true // 默认显示
     }
   },
   data () {
@@ -92,6 +99,7 @@ export default {
         this.show = false // 关闭，下面的cancel会帮你吧反馈选项切回来
       }
     },
+    // 反馈面板-底部按钮-点击事件
     cancelFn () {
       if (this.bottomText === '返回') {
         this.show = true // 强制它回来
@@ -99,11 +107,12 @@ export default {
         this.bottomText = '取消'
       }
     },
-    // 关闭面板-触发事件
+    // 反馈面板-关闭面板-触发事件
     closeFn () {
       this.actions = firstActions
       this.bottomText = '取消'
     }
+
   }
 }
 </script>

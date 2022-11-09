@@ -15,6 +15,7 @@
           :artObj="obj"
           @reportEV="reportFn"
           @disLikeEV="dislikeFn"
+          @click.native="itemClickFn(obj.art_id)"
         ></ArticleItem>
       </van-list>
     </van-pull-refresh>
@@ -22,7 +23,7 @@
 </template>
 
 <script>
-import ArticleItem from './ArticleItem.vue'
+import ArticleItem from '../../../components/ArticleItem.vue'
 import { dislikeArticleAPI, getAllArticleListAPI, reportArticleAPI } from '@/api'
 import { Notify } from 'vant'
 
@@ -78,8 +79,14 @@ export default {
       this.isLoading = false
     },
     // 底部加载的事件方法
-    async onLoad () {
+    onLoad () {
+      // immediate-check：内部不要进行判断判断而已，监听滚动事件的代码还在
+      // 第一个频道滚动到底部，在切换第二个频道的时候（新建内容没有那么高），滚动会从底部滚动回到顶部
+      // 这个时候发生了滚动，所以滚动事件还是触发了，immediate-check判断无效
+
       if (this.list.length === 0) {
+        this.loading = false // 第一次上面还是判断触底（触发onloading方法时loading自动改true）
+        // 如果不改回来，下次触底就不在执行onload方法
         return // 如果页面没有数据，没有高度，让本次onload逻辑代码不往下执行
       }
 
@@ -110,6 +117,12 @@ export default {
       Notify({
         type: 'success',
         message: '举报成功'
+      })
+    },
+    // 文章单元格-点击事件
+    itemClickFn (id) {
+      this.$router.push({
+        path: `/detail?art_id=${id}`
       })
     }
   }

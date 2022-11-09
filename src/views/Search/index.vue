@@ -11,13 +11,30 @@
       placeholder="请输入搜索关键词"
       background="#007BFF"
       shape="round"
-      @input="inputFn" />
+      @input="inputFn"
+      @search="searchFn"
+       />
     </div>
 
       <!-- 搜索建议列表 -->
-  <div class="sugg-list">
-    <div class="sugg-item" v-for="(str,index) in suggestList" :key="index" v-html="lightFn(str,kw)"></div>
+  <div class="sugg-list" v-if="kw.length !== 0">
+    <div class="sugg-item" v-for="(str,index) in suggestList" :key="index" v-html="lightFn(str,kw)" @click="suggestClickFn(str)"></div>
   </div>
+      <!-- 搜索历史 -->
+<div class="search-history" v-else>
+    <!-- 标题 -->
+    <van-cell title="搜索历史">
+        <!-- 使用 right-icon 插槽来自定义右侧图标 -->
+        <template #right-icon>
+            <van-icon name="delete" class="search-icon" @click="clearFn"/>
+        </template>
+    </van-cell>
+
+    <!-- 历史列表 -->
+    <div class="history-list">
+        <span class="history-item" v-for="str, index in history" :key="index"  @click="historyClickFn(str)">{{ str }}</span>
+    </div>
+</div>
   </div>
 
 </template>
@@ -29,7 +46,8 @@ export default {
     return {
       kw: '', // 搜索关键字
       timer: null, // 防抖的定时器
-      suggestList: []
+      suggestList: [],
+      history: JSON.parse(localStorage.getItem('his')) || []
 
     }
   },
@@ -61,8 +79,59 @@ export default {
       return originStr.replace(reg, (match) => { // match是关键字匹配的值(尽量保持原样)
         return `<span style="color: red">${match}</span>`
       })
+    },
+
+    moveFn (theKw) {
+      // 路由跳转传参
+      // 方式1：路径/值（前提：路由规则：变量名）， ->接收：$route.params
+      // 方式2：路径？参数名 = 值 ->接收：$route.query
+      // 这两种方式，你都可以自己在path后面路径拼接
+      // 你还可以用$router.push配置项params和query让js代码帮你拼接
+      // 坑：路由跳转，在watch之前执行，所以我们要让路由跳转，来一个定时器包裹，让跳转最后执行
+      setTimeout(() => {
+        this.$router.push({
+          path: `/search/${theKw}`
+        })
+      }, 0)
+    },
+    // 输入框搜索事件
+    searchFn () {
+      if (this.kw.length > 0) {
+      // 搜索关键字 - 保存到数组中
+        this.history.push(this.kw)
+        this.moveFn(this.kw)
+      }
+    },
+    // 联想菜单-点击事件
+    suggestClickFn (str) {
+      // 搜索关键字 - 保存到数组中
+      this.history.push(str)
+      this.moveFn(str)
+    },
+    // 搜索历史-点击事件
+    historyClickFn (str) {
+      this.moveFn(str)
+    },
+    // 清除历史记录
+    clearFn () {
+      this.history = []
     }
 
+  },
+  watch: {
+    history: { // 历史记录数组的改变
+      deep: true, // 深度监听
+      handler () {
+        // 立刻覆盖式的保存到本地
+        // ES6新增了2种引用类型（以前Array,Object）,（新增：Set Map）
+        // Set：无需不重复的value集合体（无下角标）
+        // 特点：你传入的数组类型，如果有重复元素，会自动清理掉重复元素，返回无重复的Set对象
+        const theSet = new Set(this.history)
+        // Set类型对象 -> 转回 -> Array数组类型
+        const arr = Array.from(theSet)
+        localStorage.setItem('his', JSON.stringify(arr))
+      }
+    }
   }
 
 }
@@ -94,6 +163,23 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+/**搜索历史 */
+.search-icon {
+  font-size: 16px;
+  line-height: inherit;
+}
+
+.history-list {
+  padding: 0 10px;
+  .history-item {
+    display: inline-block;
+    font-size: 12px;
+    padding: 8px 14px;
+    background-color: #efefef;
+    margin: 10px 8px 0px 8px;
+    border-radius: 10px;
   }
 }
 </style>
