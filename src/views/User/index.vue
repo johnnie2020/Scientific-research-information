@@ -6,10 +6,10 @@
       <van-cell>
         <!-- 使用 title 插槽来自定义标题 -->
         <template #icon>
-          <img src="" alt="" class="avatar" />
+          <img :src="$store.state.userPhoto" alt="" class="avatar" />
         </template>
         <template #title>
-          <span class="username">用户名</span>
+          <span class="username">{{userObj.name}}</span>
         </template>
         <template #label>
           <van-tag color="#fff" text-color="#007bff">申请认证</van-tag>
@@ -18,15 +18,15 @@
       <!-- 动态、关注、粉丝 -->
       <div class="user-data">
         <div class="user-data-item">
-          <span>0</span>
+          <span>{{userObj.art_count}}</span>
           <span>动态</span>
         </div>
         <div class="user-data-item">
-          <span>0</span>
+          <span>{{userObj.follow_count}}</span>
           <span>关注</span>
         </div>
         <div class="user-data-item">
-          <span>0</span>
+          <span>{{userObj.fans_count}}</span>
           <span>粉丝</span>
         </div>
       </div>
@@ -34,15 +34,54 @@
 
     <!-- 操作面板 -->
     <van-cell-group class="action-card">
-      <van-cell icon="edit" title="编辑资料" is-link />
+      <van-cell icon="edit" title="编辑资料" is-link to="/user_edit"/>
       <van-cell icon="chat-o" title="小思同学" is-link />
-      <van-cell icon="warning-o" title="退出登录" is-link />
+      <van-cell icon="warning-o" title="退出登录" is-link @click="quitFn"/>
     </van-cell-group>
   </div>
 </template>
 
 <script>
-export default {}
+import { getUserInfoAPI } from '@/api'
+import { Dialog } from 'vant'
+import { removeToken } from '@/utils/token'
+import { mapMutations } from 'vuex'
+export default {
+  data () {
+    return {
+      userObj: {} // 用户对象
+    }
+  },
+  async created () {
+    const res = await getUserInfoAPI()
+    console.log(res)
+    this.userObj = res.data.data
+    // 调用mutations方法有两种方式：
+    // 1.直接使用
+    // this.$store.commit('SET_USERPHOTO', this.userObj.photo)
+    // 2.映射使用,通过mapmutations辅助函数
+    this.SET_USERPHOTO(this.userObj.photo)
+  },
+  methods: {
+    ...mapMutations(['SET_USERPHOTO']),
+    quitFn () {
+      Dialog.confirm({
+        title: '是否退出登录',
+        message: '真的要走了吗？'
+      })
+        .then(() => { // 用户点击确认选项，内部resolve触发then方法
+          // on confirm
+          removeToken()
+          this.$router.replace('/login')
+        })
+        .catch(() => { // 用户点击“取消”选项 -> 内部reject触发catch
+          // on cancel
+        })
+    }
+  }
+// 主动退出 -> 用户点击退出，清空token，强制replace切换登录页
+// 被动退出 -> 吧token值传后台，后台返回401 -> 响应拦截器发现401状态，证明你身份过期，强制进登录页
+}
 </script>
 
 <style scoped lang="less">

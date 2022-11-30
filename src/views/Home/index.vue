@@ -69,6 +69,7 @@
 import { getUserChannelsAPI, getAllChannelsAPI, updateChannelsAPI, removeTheChannelAPI } from '@/api'
 import ArticleList from './components/ArticleList.vue'
 import ChannelEdit from './ChannelEdit.vue'
+// import { Tab } from 'vant'
 
 // 目标1：获取不同的文章列表，需要传递不同的频道id
 // 想法：让van-tabs的v-model关联频道id
@@ -85,7 +86,9 @@ export default {
       userChannelList: [], // 用户选择的频道列表
       allChaanelList: [], // 所有频道列表
       // articleList: [] // 文章列表
-      show: false // 频道弹出层显示或隐藏
+      show: false, // 频道弹出层显示或隐藏
+      channelScrollTObj: {} // 保存每个频道的滚动位置
+      // 值样子的构想：{推荐频道ID：滚动距离，html频道ID：自己滚动距离}
     }
   },
   async created () {
@@ -101,7 +104,7 @@ export default {
   },
   methods: {
     // tabsq切换的事件 -> 获取文章列表数据
-    async channelChangeFn () {
+    channelChangeFn () {
       // 文章列表
       // const res2 = await getAllArticleListAPI({
       //   channel_id: this.channelId, // 先默认请求推荐频道数据
@@ -109,6 +112,12 @@ export default {
       // })
       // console.log(res2)
       // this.articleList = res2.data.data.results
+      // Tab切换时，这个组件内部，会把切走的容器height设置为0，滚动条因为没有高度回到了顶部
+      // 切回来的一瞬间，没有高度，设置滚动位置也没用,所以先让dom更新完成
+      this.$nextTick(() => {
+        document.documentElement.scrollTop = this.channelScrollTObj[this.channelId]
+        // console.log(222)
+      })
     },
     showPopup () {
       this.show = true
@@ -164,6 +173,11 @@ export default {
     // 首页-右上角放大镜点击事件 -> 跳转到搜索页面
     moveSearchPageFn () {
       this.$router.push('/search')
+    },
+    scrollFn () {
+      this.$route.meta.scrollT = document.documentElement.scrollTop
+      this.channelScrollTObj[this.channelId] = document.documentElement.scrollTop
+      // console.log(this.channelScrollTObj)
     }
   },
 
@@ -195,7 +209,23 @@ export default {
       // 上述代码简化写法
       // return this.allChannelList.filter(bigObj => (this.userChannelList.findIndex(smallObj => smallObj.id === bigObj.id) === -1))
     }
+  },
+  activated () {
+    console.log(this.$route)
+    window.addEventListener('scroll', this.scrollFn)
+    // 立即设置，滚动条位置
+    document.documentElement.scrollTop = this.$route.meta.scrollT
+  },
+  deactivated () {
+    window.removeEventListener('scroll', this.scrollFn)
   }
+
+  // // 前提：组件缓存，切走了就是失去激活生命周期方法触发
+  // // 无组件缓存，被切走了，destroyed销毁生命周期方法
+  // deactivated () {
+  //   this.$route.meta.scrollT = document.documentElement.scrollTop
+  // }
+
 }
 </script>
 
@@ -208,7 +238,7 @@ export default {
   padding-top: 48px;
 }
 /* // 设置 tabs 容器的样式 */
-/deep/ .van-tabs__wrap {
+:deep(.van-tabs__wrap)  {
   padding-right: 30px;
   background-color: #fff;
 }

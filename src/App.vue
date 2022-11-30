@@ -1,6 +1,10 @@
 <template>
   <div>
-    <router-view></router-view>
+    <!-- 有些路由一级路由页面无需缓存 -->
+    <keep-alive exclude="Search,SearchResult,Detail,UserEdit">
+      <router-view></router-view>
+    </keep-alive>
+
   </div>
 </template>
 <script>

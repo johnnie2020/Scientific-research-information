@@ -311,14 +311,27 @@
 // const arr1 = [3, 5676, 435, 645, 643, 8235, 122, 255, 10]
 // console.log(radixSort(arr1))
 
-const aa = {}
-console.log(aa)
+// const aa = {}
+// console.log(aa)
+// setTimeout(() => {
+//   aa.a = 1
+// })
+// setTimeout(() => {
+//   aa.a = 2
+// }, 5000)
+// setTimeout(() => {
+//   aa.a = 3
+// }, 10000)
+
 setTimeout(() => {
-  aa.a = 1
+  console.log(1)
+}, 0)
+new Promise((resolve) => {
+  console.log(2)
+  resolve()
+}).then(() => {
+  console.log(3)
+}).then(() => {
+  console.log(4)
 })
-setTimeout(() => {
-  aa.a = 2
-}, 5000)
-setTimeout(() => {
-  aa.a = 3
-}, 10000)
+console.log(5)
